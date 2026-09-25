@@ -1,0 +1,26 @@
+occupation,skill,level,importance
+Two/Three Wheeler Mechanic,Engine Repair,core,high
+Two/Three Wheeler Mechanic,Brake Repair,core,high
+Two/Three Wheeler Mechanic,Electrical Diagnostics,intermediate,high
+Two/Three Wheeler Mechanic,Advanced Diagnostics (OBD/Fuel Injection),advanced,medium
+Two/Three Wheeler Mechanic,Customer Handling & Billing,basic,low
+Tailor (Ready-made Garments),Hand Stitching,core,high
+Tailor (Ready-made Garments),Machine Stitching,core,high
+Tailor (Ready-made Garments),Pattern Cutting,intermediate,high
+Tailor (Ready-made Garments),Fabric Costing & Sizing,intermediate,medium
+Tailor (Ready-made Garments),Boutique/Business Management,advanced,medium
+Auto Electrician,Vehicle Wiring,core,high
+Auto Electrician,Battery Systems,core,high
+Auto Electrician,Electronic Fuel Injection,advanced,high
+Plumber (General),Pipe Fitting,core,high
+Plumber (General),Leak Diagnosis,core,high
+Plumber (General),Sanitary Installation,intermediate,medium
+Mason (Building),Bricklaying,core,high
+Mason (Building),Plastering,core,high
+Mason (Building),Reading Building Plans,intermediate,medium
+Cook (Domestic/Small Establishment),Basic Cooking,core,high
+Cook (Domestic/Small Establishment),Hygiene & Food Safety,intermediate,high
+Cook (Domestic/Small Establishment),Menu Costing,advanced,low
+Field Crop Farm Worker,Sowing & Harvesting,core,high
+Field Crop Farm Worker,Irrigation Management,intermediate,medium
+Field Crop Farm Worker,Organic Farming Practices,advanced,medium
