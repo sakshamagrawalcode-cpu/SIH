@@ -1,0 +1,11 @@
+course_id,course,type,centre,location,block,distance_km,duration,skills_covered,eligibility,scheme
+C001,Certified Two-Wheeler Service Technician (RPL),RPL,Govt ITI Rampur,Rampur,Rampur Block,4,15 days,Electrical Diagnostics|Advanced Diagnostics (OBD/Fuel Injection),Prior work experience 2+ years,PMKVY 4.0 (RPL)
+C002,Advanced Automobile Electrician Course,Training,Skill Centre Bhairahatta,Bhairahatta,Rampur Block,9,45 days,Electrical Diagnostics|Vehicle Wiring|Battery Systems,Class 8 pass,PM-AJAY Skill Training
+C003,Two-Wheeler Workshop Start-up Support,Business Support,District Industries Centre,Rampur,Rampur Block,5,NA (one-time support),Business Management|Customer Handling & Billing,Completed relevant training or 3+ years experience,PM-AJAY GIA Business Component
+C004,Basic Garment Stitching Certificate,Training,Women ITI Sultanpur,Sultanpur,Sultanpur Block,3,60 days,Machine Stitching|Pattern Cutting,No formal education required,PMKVY 4.0
+C005,Boutique & Tailoring Business Support,Business Support,District Industries Centre,Sultanpur,Sultanpur Block,3,NA (one-time support),Boutique/Business Management|Fabric Costing & Sizing,Completed relevant training or 2+ years experience,PM-AJAY GIA Business Component
+C006,Advanced Fashion Design & Embroidery,Training,Skill Centre Sultanpur,Sultanpur,Sultanpur Block,6,90 days,Pattern Cutting|Boutique/Business Management,Class 8 pass,PMKVY 4.0
+C007,Plumbing Certification (RPL),RPL,Govt ITI Rampur,Rampur,Rampur Block,4,10 days,Pipe Fitting|Leak Diagnosis,Prior work experience 2+ years,PMKVY 4.0 (RPL)
+C008,Rural Masonry Skill Upgrade,Training,Skill Centre Bhairahatta,Bhairahatta,Rampur Block,9,30 days,Bricklaying|Reading Building Plans,No formal education required,PM-AJAY Skill Training
+C009,Food Safety & Commercial Cooking,Training,Women ITI Sultanpur,Sultanpur,Sultanpur Block,3,30 days,Hygiene & Food Safety|Menu Costing,No formal education required,PMKVY 4.0
+C010,Modern Farming Techniques Workshop,Training,KVK Rampur,Rampur,Rampur Block,7,7 days,Irrigation Management|Organic Farming Practices,No formal education required,PM-AJAY Skill Training
