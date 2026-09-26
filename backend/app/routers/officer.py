@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from ..db import get_conn
+from ..db import get_conn, add_case_history
 from .cases import _row_to_case
 
 router = APIRouter(prefix="/api/officer", tags=["officer"])
@@ -27,6 +27,7 @@ def approve_case(case_id: str, req: ActionRequest):
         if not row:
             raise HTTPException(404, "Case not found")
         conn.execute("UPDATE cases SET status=?, officer_note=? WHERE case_id=?", ("approved", req.note, case_id))
+        add_case_history(conn, case_id, "approved", req.note or "Approved by officer")
         conn.commit()
     return {"case_id": case_id, "status": "approved"}
 
@@ -38,5 +39,6 @@ def request_clarification(case_id: str, req: ActionRequest):
         if not row:
             raise HTTPException(404, "Case not found")
         conn.execute("UPDATE cases SET status=?, officer_note=? WHERE case_id=?", ("clarification_requested", req.note, case_id))
+        add_case_history(conn, case_id, "clarification_requested", req.note or "Clarification requested by officer")
         conn.commit()
     return {"case_id": case_id, "status": "clarification_requested"}

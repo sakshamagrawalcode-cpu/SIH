@@ -3,16 +3,17 @@ from ..db import get_conn
 
 router = APIRouter(prefix="/api/map", tags=["map"])
 
-# Sample/demo block coordinates only - illustrative, not real administrative data.
+# Sample/demo block coordinates only (Ahmedabad district, Gujarat) -
+# illustrative, not real administrative or statistical data.
 BLOCKS = [
-    {"block": "Rampur Block", "lat": 26.4499, "lng": 80.3319, "demo_demand": {
+    {"block": "Dholka Block", "lat": 22.7286, "lng": 72.4419, "demo_demand": {
         "Two/Three Wheeler Mechanic": 34, "Plumber (General)": 18, "Mason (Building)": 21,
         "Field Crop Farm Worker": 40,
     }},
-    {"block": "Sultanpur Block", "lat": 26.2647, "lng": 82.0721, "demo_demand": {
+    {"block": "Sanand Block", "lat": 22.9880, "lng": 72.3820, "demo_demand": {
         "Tailor (Ready-made Garments)": 29, "Embroiderer": 15, "Cook (Domestic/Small Establishment)": 12,
     }},
-    {"block": "Bhairahatta Block", "lat": 26.7900, "lng": 80.8900, "demo_demand": {
+    {"block": "Bavla Block", "lat": 22.8340, "lng": 72.3670, "demo_demand": {
         "Auto Electrician": 11, "Mason (Building)": 17, "Two/Three Wheeler Mechanic": 9,
     }},
 ]
@@ -39,4 +40,4 @@ def demand_map():
             "block": b["block"], "lat": b["lat"], "lng": b["lng"],
             "demand": demand, "total": total,
         })
-    return {"blocks": result, "note": "Demo/sample demand data - illustrative only, not official statistics."}
+    return {"blocks": result, "note": "Demo/sample demand data (Ahmedabad district) - illustrative only, not official statistics."}

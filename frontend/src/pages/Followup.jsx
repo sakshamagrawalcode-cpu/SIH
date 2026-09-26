@@ -3,17 +3,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import TopBar from "../components/TopBar.jsx";
 import { api } from "../api/client.js";
 
-const MARKER_COLOR = {
-  pending: "#9aa5ab",
-  in_progress: "#d98c2b",
-  done: "#1a7f5a",
+const OUTCOMES = [
+  { key: "not_started", label: "Not Started" },
+  { key: "training", label: "Training" },
+  { key: "employed", label: "Employed" },
+  { key: "business_started", label: "Business Started" },
+  { key: "earning", label: "Earning" },
+];
+
+const OUTCOME_COLOR = {
+  not_started: "#9aa5ab", training: "#d98c2b", employed: "#1a7f5a",
+  business_started: "#1a7f5a", earning: "#125c40",
 };
 
-const DEMO_EARNINGS = { M1: 3500, M3: 6200, M6: 9800 };
-const DEMO_NOTES = {
-  M1: "Enrolled at centre, training in progress.",
-  M3: "Certification completed, started freelance repair work.",
-  M6: "Working independently, earnings stabilising.",
+const DEMO = {
+  M1: { outcome: "training", note: "Enrolled at centre, training in progress.", earning: 3500 },
+  M3: { outcome: "employed", note: "Certification completed, started freelance repair work.", earning: 6200 },
+  M6: { outcome: "earning", note: "Working independently, earnings stabilising.", earning: 9800 },
 };
 
 export default function Followup() {
@@ -22,40 +28,24 @@ export default function Followup() {
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const load = () => {
-    api.getFollowups(caseId).then(setData).catch(() => setData({ error: true }));
-  };
+  const load = () => api.getFollowups(caseId).then(setData).catch(() => setData({ error: true }));
+  useEffect(() => { load(); }, [caseId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(load, [caseId]);
-
-  const advance = async (milestone) => {
+  const setOutcome = async (milestone, outcome) => {
     setBusy(true);
-    await api.updateFollowup(caseId, milestone, {
-      status: "done",
-      note: DEMO_NOTES[milestone],
-      earning_monthly: DEMO_EARNINGS[milestone],
+    const demo = DEMO[milestone] || {};
+    await api.followupUpdate(caseId, milestone, {
+      status: outcome === "not_started" ? "pending" : "done",
+      outcome,
+      note: demo.note,
+      earning_monthly: ["employed", "business_started", "earning"].includes(outcome) ? demo.earning : null,
     });
-    load();
+    await load();
     setBusy(false);
   };
 
-  if (!data) {
-    return (
-      <div className="app-shell">
-        <TopBar title="Follow-up" />
-        <div className="screen"><p className="muted">Loading...</p></div>
-      </div>
-    );
-  }
-
-  if (data.error) {
-    return (
-      <div className="app-shell">
-        <TopBar title="Follow-up" />
-        <div className="screen"><p style={{ color: "var(--color-danger)" }}>No follow-up data for this case.</p></div>
-      </div>
-    );
-  }
+  if (!data) return <Shell title="Follow-up"><p className="muted">Loading...</p></Shell>;
+  if (data.error) return <Shell title="Follow-up"><p style={{ color: "var(--color-danger)" }}>No follow-up data for this case.</p></Shell>;
 
   const lastEarning = [...data.milestones].reverse().find((m) => m.earning_monthly)?.earning_monthly;
 
@@ -64,26 +54,32 @@ export default function Followup() {
       <TopBar title="Follow-up & Outcome" />
       <div className="screen">
         <h1>Follow-up Timeline</h1>
-        <p className="muted">Check-ins at 1, 3 and 6 months after placement.</p>
+        <p className="muted">Check-ins at 1, 3 and 6 months. Officer updates the outcome at each milestone.</p>
 
         <div className="card">
           {data.milestones.map((m) => (
             <div className="timeline-row" key={m.milestone} style={{ marginBottom: 18 }}>
-              <div className="timeline-marker" style={{ background: MARKER_COLOR[m.status] || "#9aa5ab" }}>
-                {m.milestone}
-              </div>
+              <div className="timeline-marker" style={{ background: OUTCOME_COLOR[m.outcome] || "#9aa5ab" }}>{m.milestone}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
                   <strong>{m.milestone} Follow-up</strong>
-                  <span className={`status-badge status-${m.status}`}>{m.status.replace(/_/g, " ")}</span>
+                  <span className="status-badge" style={{ background: "#eef0f4", color: "#56606e" }}>{(m.outcome || "not_started").replace(/_/g, " ")}</span>
                 </div>
-                <p className="muted">{m.note || "Not yet conducted"}</p>
+                {m.note && <p className="muted">{m.note}</p>}
                 {m.earning_monthly && <p style={{ marginTop: 4 }}>Reported monthly earning: ₹{m.earning_monthly}</p>}
-                {m.status === "pending" && (
-                  <button className="btn btn-sm btn-outline" style={{ marginTop: 8 }} disabled={busy} onClick={() => advance(m.milestone)}>
-                    Simulate {m.milestone} Check-in
-                  </button>
-                )}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                  {OUTCOMES.map((o) => (
+                    <button
+                      key={o.key}
+                      className="btn btn-sm"
+                      style={{ background: m.outcome === o.key ? "var(--color-primary)" : "var(--color-primary-light)", color: m.outcome === o.key ? "white" : "var(--color-primary-dark)" }}
+                      disabled={busy}
+                      onClick={() => setOutcome(m.milestone, o.key)}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
@@ -97,10 +93,12 @@ export default function Followup() {
           </div>
         )}
 
-        <button className="btn btn-outline btn-block" onClick={() => navigate(`/officer/case/${caseId}`)}>
-          ← Back to Case
-        </button>
+        <button className="btn btn-outline btn-block" onClick={() => navigate(`/officer/case/${caseId}`)}>← Back to Case</button>
       </div>
     </div>
   );
+}
+
+function Shell({ title, children }) {
+  return <div className="app-shell"><TopBar title={title} /><div className="screen">{children}</div></div>;
 }

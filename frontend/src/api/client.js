@@ -37,6 +37,29 @@ export const api = {
   satyaVerify: (option) =>
     request("/api/satya-verify", { method: "POST", body: JSON.stringify({ option }) }),
 
+  eligibility: (age, education, years_experience) =>
+    request("/api/eligibility", { method: "POST", body: JSON.stringify({ age, education, years_experience }) }),
+
+  ask: (question, context) =>
+    request("/api/ask", { method: "POST", body: JSON.stringify({ question, context }) }),
+
+  getProfile: (phone) => request(`/api/profiles/${phone}`),
+
+  upsertProfile: (payload) =>
+    request("/api/profiles", { method: "POST", body: JSON.stringify(payload) }),
+
+  uploadDocument: (payload) =>
+    request("/api/documents", { method: "POST", body: JSON.stringify(payload) }),
+
+  listDocuments: ({ phone, caseId } = {}) => {
+    const qs = phone ? `?phone=${phone}` : caseId ? `?case_id=${caseId}` : "";
+    return request(`/api/documents${qs}`);
+  },
+
+  getDocument: (id) => request(`/api/documents/${id}`),
+
+  deleteDocument: (id) => request(`/api/documents/${id}`, { method: "DELETE" }),
+
   createCase: (payload) =>
     request("/api/cases", { method: "POST", body: JSON.stringify(payload) }),
 
@@ -54,6 +77,9 @@ export const api = {
   getFollowups: (caseId) => request(`/api/followup/${caseId}`),
 
   updateFollowup: (caseId, milestone, payload) =>
+    request(`/api/followup/${caseId}/${milestone}`, { method: "POST", body: JSON.stringify(payload) }),
+
+  followupUpdate: (caseId, milestone, payload) =>
     request(`/api/followup/${caseId}/${milestone}`, { method: "POST", body: JSON.stringify(payload) }),
 
   demandMap: () => request("/api/map"),

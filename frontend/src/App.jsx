@@ -1,6 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing.jsx";
-import PhoneVoice from "./pages/PhoneVoice.jsx";
+import CallSimulator from "./pages/CallSimulator.jsx";
+import UserPortal from "./pages/UserPortal.jsx";
+import EditProfile from "./pages/EditProfile.jsx";
+import Documents from "./pages/Documents.jsx";
 import Profile from "./pages/Profile.jsx";
 import SkillGap from "./pages/SkillGap.jsx";
 import Recommendations from "./pages/Recommendations.jsx";
@@ -16,7 +19,11 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/voice" element={<PhoneVoice />} />
+      <Route path="/voice" element={<CallSimulator />} />
+      <Route path="/call" element={<CallSimulator />} />
+      <Route path="/portal" element={<UserPortal />} />
+      <Route path="/profile-edit" element={<EditProfile />} />
+      <Route path="/documents" element={<Documents />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/skill-gap" element={<SkillGap />} />
       <Route path="/recommendations" element={<Recommendations />} />

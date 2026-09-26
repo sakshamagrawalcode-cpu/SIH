@@ -11,17 +11,45 @@ functional prototype** for the hackathon demo, not a production system.
 
 ## What's in this prototype
 
-- **Frontend** (`frontend/`): React (Vite) app implementing the full 11-screen
-  user + officer journey: Landing → Phone/Voice → Profile → Skill Gap →
-  Recommendations → Career Path → SATYA → Case → Officer Dashboard →
-  Follow-up → Demand Map (Leaflet).
-- **Backend** (`backend/`): FastAPI service with a rule/keyword-based
-  occupation-matching, skill-gap, recommendation, SATYA-verification, case,
-  officer-approval and follow-up engine, backed by SQLite and demo CSV data.
+- **Frontend** (`frontend/`): React (Vite) app with two sides:
+  - **User / phone simulator** — a 3-panel Call Simulator (live profile table ·
+    phone + conversation · AI-pipeline status). Full flow: dial saved number →
+    call runs and auto-ends → callback → answer → IVR language select
+    (Hindi / English / Gujarati, press 1/2/3) → first-time check → keypad +
+    voice profile collection (name, age, gender, education, location, travel,
+    work, experience) with live table updates → read-back & correct →
+    eligibility check → NCO occupation match → occupation-specific questions
+    (one at a time, with progress) → HAS/NEEDS/MISSING skill gap →
+    recommendations → career path → free Q&A (SATYA-verified) → option select
+    → SATYA verification → case creation. Plus **User Portal**, **Edit Profile**
+    and **Documents** upload pages.
+  - **Officer / admin portal** — dashboard, case detail with status timeline,
+    skill gap, recommendation, document viewer, case history, approve /
+    request-clarification, follow-up outcomes (M1/M3/M6), and a Leaflet
+    **Demand Map**.
+  - **Demo controls** bar (Reset · Simulate Missed Call · Answer · Auto-fill
+    Ramesh · Auto-fill Sunita · Skip Voice) for fast judging.
+- **Backend** (`backend/`): FastAPI service with rule/keyword-based
+  occupation-matching, eligibility, skill-gap, recommendation,
+  SATYA-verification, Q&A (answers only from verified demo data), profile
+  (first-time check by phone), documents, case, officer-approval and
+  follow-up engines, backed by SQLite and demo CSV/JSON data.
 - **Voice**: simulated in-browser using the Web Speech API (STT + TTS) with a
   typed-text fallback where the browser doesn't support it. This stands in
   for the production stack (Pipecat + Sarvam Saaras/Bulbul/LLM + AI4Bharat
   IndicConformer) described in the architecture doc.
+
+## What is stubbed for later connection
+
+The prototype runs fully offline. These target integrations are simulated and
+can be wired in later without changing the app's data contracts:
+- **Sarvam STT / TTS / LLM** and **AI4Bharat IndicConformer** → browser Web
+  Speech API + a transparent rule/keyword engine (`backend/app/engine.py`).
+- **Telephony (Exotel/Plivo)** → simulated missed-call / callback UI.
+- **PostgreSQL + pgvector, Redis + Celery** → SQLite; not needed at prototype
+  scale.
+- **Real government/scheme data & document verification** → clearly-labelled
+  demo/sample data; no official statistics are invented.
 
 **All scheme names, course details, distances, demand figures and outcomes
 are illustrative demo/sample data** — clearly marked in the UI — and must

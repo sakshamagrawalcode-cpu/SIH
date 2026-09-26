@@ -162,3 +162,105 @@ def satya_verify(option: dict) -> list[dict]:
 
     all_verified = all(c["verified"] for c in checks)
     return {"checks": checks, "all_verified": all_verified}
+
+
+def check_eligibility(age: int, education: str, years_experience: int) -> dict:
+    """Demo eligibility check against rules.json. Clearly NOT official policy."""
+    rules = dl.rules.get("eligibility", {})
+    min_age = rules.get("min_age", 18)
+    max_age = rules.get("max_age", 45)
+    reasons = []
+    eligible = True
+
+    if age < min_age:
+        eligible = False
+        reasons.append(f"Age {age} is below the demo minimum of {min_age}.")
+    elif age > max_age:
+        eligible = False
+        reasons.append(f"Age {age} is above the demo maximum of {max_age}.")
+    else:
+        reasons.append(f"Age {age} is within the demo eligible range ({min_age}-{max_age}).")
+
+    return {
+        "eligible": eligible,
+        "reasons": reasons,
+        "disclaimer": rules.get("notes", "Demo eligibility only."),
+    }
+
+
+def _answer_from_option(question: str, context: dict) -> dict:
+    """Very small keyword Q&A that answers ONLY from the demo data in context.
+
+    Stands in for the Sarvam LLM dialog step. Every answer is passed through
+    SATYA-style verification: a claim is only 'verified' if it comes straight
+    from the selected option / course / scheme data. Nothing is invented.
+    """
+    q = question.lower()
+    option = context.get("selected_option") or {}
+    occupation = context.get("occupation", "your occupation")
+
+    def verified(answer, fact, source):
+        return {"answer": answer, "verified": True, "fact": fact, "source": source}
+
+    def unverified(answer):
+        return {"answer": answer, "verified": False, "fact": None, "source": "not in demo database"}
+
+    if not option:
+        return unverified("Please select a career option first so I can answer using verified course details.")
+
+    if any(k in q for k in ["how long", "duration", "kitne din", "kitna time", "samay"]):
+        return verified(
+            f"The course '{option.get('title')}' runs for {option.get('duration')}.",
+            f"duration = {option.get('duration')}", "courses.csv")
+
+    if any(k in q for k in ["how far", "distance", "kitni door", "door", "near", "paas"]):
+        return verified(
+            f"The centre {option.get('centre')} is about {option.get('distance_km')} km away.",
+            f"distance = {option.get('distance_km')} km", "courses.csv")
+
+    if any(k in q for k in ["eligib", "yogya", "qualify", "can i join", "documents", "document", "kaagaz"]):
+        return verified(
+            f"Eligibility for this option: {option.get('eligibility')}.",
+            f"eligibility = {option.get('eligibility')}", "courses.csv")
+
+    if any(k in q for k in ["scheme", "yojana", "free", "cost", "paisa", "fees", "fee", "benefit"]):
+        return verified(
+            f"This option is supported under {option.get('scheme')} — {option.get('scheme_benefit')}.",
+            f"scheme = {option.get('scheme')}", "schemes.csv")
+
+    if any(k in q for k in ["what skill", "kya seekh", "skills", "learn", "seekh"]):
+        skills = option.get("skills_covered", [])
+        skills_txt = ", ".join(skills) if isinstance(skills, list) else str(skills)
+        return verified(
+            f"This option helps you gain: {skills_txt}.",
+            f"skills_covered = {skills_txt}", "courses.csv")
+
+    if any(k in q for k in ["business", "workshop", "own", "dukaan", "khud", "apna"]):
+        path = get_career_path(occupation)
+        last = path[-1]["step"] if path else "self-employment"
+        return verified(
+            f"Yes — the career path for {occupation} can lead to {last}. Business/start-up support options are available once you complete training or have enough experience.",
+            f"career path ends at {last}", "career_paths.csv")
+
+    if any(k in q for k in ["difficult", "hard", "mushkil", "aasan", "easy"]):
+        return verified(
+            f"The course '{option.get('title')}' is a {option.get('duration')} program designed for people already working in {occupation}, so it builds on skills you already have.",
+            f"duration = {option.get('duration')}", "courses.csv")
+
+    return unverified(
+        "I can only answer using verified course details. Please ask about duration, distance, eligibility, scheme/cost, skills, or starting your own business.")
+
+
+def answer_question(question: str, context: dict) -> dict:
+    """Q&A endpoint output: answer + SATYA verification block."""
+    result = _answer_from_option(question, context)
+    satya = {
+        "claim": result["fact"] or result["answer"],
+        "verified": result["verified"],
+        "source": result["source"],
+        "status": "VERIFIED" if result["verified"] else "NOT VERIFIED",
+    }
+    spoken = result["answer"]
+    if not result["verified"]:
+        spoken = "I could not verify this against the database, so I will not state it as a fact. " + result["answer"]
+    return {"answer": spoken, "satya": satya}

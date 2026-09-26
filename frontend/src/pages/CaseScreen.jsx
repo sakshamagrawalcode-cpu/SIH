@@ -4,44 +4,26 @@ import TopBar from "../components/TopBar.jsx";
 import { useJourney } from "../context/JourneyContext.jsx";
 import { api } from "../api/client.js";
 
+const LIFECYCLE = ["submitted", "pending_officer_review", "approved", "active", "closed"];
+
 export default function CaseScreen() {
   const navigate = useNavigate();
-  const { state, update } = useJourney();
-  const [loading, setLoading] = useState(!state.caseId);
+  const { state } = useJourney();
+  const [caseData, setCaseData] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (state.caseId || !state.selectedOption) return;
-    api.createCase({
-      name: state.profile.name || "Demo Caller",
-      age: Number(state.profile.age) || 0,
-      education: state.profile.education,
-      location: state.profile.location_block,
-      phone: state.profile.phone,
-      language: state.language,
-      occupation: state.occupationMatch.occupation,
-      years_experience: state.yearsExperience,
-      skill_gap: state.gap,
-      selected_option: state.selectedOption,
-      career_path: state.careerPath,
-      satya_checks: state.satya,
-    }).then((res) => {
-      update({ caseId: res.case_id, csc: res.csc });
-      setLoading(false);
-    }).catch(() => {
-      setError("Could not create case — is the backend running?");
-      setLoading(false);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!state.caseId) return;
+    api.getCase(state.caseId).then(setCaseData).catch(() => setError("Could not load case."));
+  }, [state.caseId]);
 
-  if (!state.selectedOption) {
+  if (!state.caseId) {
     return (
       <div className="app-shell">
-        <TopBar title="Case" />
+        <TopBar title="My Case" />
         <div className="screen">
-          <p className="muted">No option selected yet.</p>
-          <button className="btn btn-primary" onClick={() => navigate("/recommendations")}>Go Back</button>
+          <p className="muted">No case yet. Complete a call to create one.</p>
+          <button className="btn btn-primary" onClick={() => navigate("/voice")}>Start Call</button>
         </div>
       </div>
     );
@@ -49,45 +31,53 @@ export default function CaseScreen() {
 
   return (
     <div className="app-shell">
-      <TopBar title="Case Created" />
+      <TopBar title="My Case" />
       <div className="screen">
-        {loading && <p className="muted">Creating your case...</p>}
         {error && <p style={{ color: "var(--color-danger)" }}>{error}</p>}
+        <div className="card center" style={{ background: "var(--color-primary-light)" }}>
+          <p className="muted">Case ID</p>
+          <h1 style={{ color: "var(--color-primary-dark)" }}>{state.caseId}</h1>
+          <span className={`status-badge status-${caseData?.status || "submitted"}`}>{(caseData?.status || "submitted").replace(/_/g, " ")}</span>
+        </div>
 
-        {state.caseId && (
-          <>
-            <div className="card center" style={{ background: "var(--color-primary-light)" }}>
-              <p className="muted">Case ID</p>
-              <h1 style={{ color: "var(--color-primary-dark)" }}>{state.caseId}</h1>
-              <span className="status-badge status-submitted">Submitted</span>
+        {caseData && (
+          <div className="card">
+            <h3>Status</h3>
+            <div className="status-timeline">
+              {LIFECYCLE.map((s) => {
+                const reached = caseData.history?.some((h) => h.stage === s) || s === caseData.status;
+                return (
+                  <div key={s} className={`status-step ${reached ? "reached" : ""} ${s === caseData.status ? "current" : ""}`}>
+                    <span className="dot" /><span className="lbl">{s.replace(/_/g, " ")}</span>
+                  </div>
+                );
+              })}
             </div>
-
-            <div className="card">
-              <h3>Selected Option</h3>
-              <p style={{ marginTop: 8 }}><strong>{state.selectedOption.title}</strong></p>
-              <p className="muted">{state.selectedOption.centre}</p>
-            </div>
-
-            <div className="card">
-              <h3>Nearest CSC</h3>
-              <p style={{ marginTop: 8 }}>{state.csc}</p>
-              <p className="muted">Visit with your Case ID to complete verification and enrollment.</p>
-            </div>
-
-            <div className="card">
-              <h3>What happens next</h3>
-              <ol style={{ paddingLeft: 18, margin: "8px 0 0", display: "flex", flexDirection: "column", gap: 6 }}>
-                <li>Officer reviews and approves your case</li>
-                <li>You complete enrollment at the CSC / centre</li>
-                <li>Follow-up check-ins at 1, 3 and 6 months</li>
-              </ol>
-            </div>
-
-            <button className="btn btn-primary btn-block" onClick={() => navigate("/officer")}>
-              Simulate: View as Officer →
-            </button>
-          </>
+          </div>
         )}
+
+        <div className="card">
+          <h3>Selected Option</h3>
+          <p style={{ marginTop: 8 }}><strong>{state.selectedOption?.title}</strong></p>
+          <p className="muted">{state.csc}</p>
+          <p className="muted">Visit with your Case ID to complete verification and enrollment.</p>
+        </div>
+
+        {caseData?.documents?.length > 0 && (
+          <div className="card">
+            <h3>Documents ({caseData.documents.length})</h3>
+            {caseData.documents.map((d) => (
+              <p key={d.id} className="muted" style={{ marginTop: 4 }}>✓ {d.filename} — {d.doc_type}</p>
+            ))}
+          </div>
+        )}
+
+        <div className="grid-2">
+          <button className="btn btn-secondary btn-block" onClick={() => navigate("/documents")}>Upload Documents</button>
+          <button className="btn btn-outline btn-block" onClick={() => navigate(`/followup/${state.caseId}`)}>Follow-up</button>
+        </div>
+        <button className="btn btn-primary btn-block" onClick={() => navigate("/officer")}>View as Officer →</button>
+        <button className="btn btn-outline btn-block" onClick={() => navigate("/portal")}>← User Portal</button>
       </div>
     </div>
   );
