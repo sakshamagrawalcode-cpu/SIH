@@ -59,3 +59,24 @@ class SatyaRequest(BaseModel):
 @router.post("/satya-verify")
 def satya_verify(req: SatyaRequest):
     return engine.satya_verify(req.option)
+
+
+class EligibilityRequest(BaseModel):
+    age: int
+    education: str
+    years_experience: int
+
+
+@router.post("/eligibility")
+def eligibility(req: EligibilityRequest):
+    return engine.check_eligibility(req.age, req.education, req.years_experience)
+
+
+class QARequest(BaseModel):
+    question: str
+    context: dict
+
+
+@router.post("/ask")
+def ask(req: QARequest):
+    return engine.answer_question(req.question, req.context)

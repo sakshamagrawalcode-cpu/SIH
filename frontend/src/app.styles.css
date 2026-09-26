@@ -394,6 +394,81 @@ p { line-height: 1.5; margin: 0; }
   color: white;
 }
 
+.status-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 12px;
+}
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 72px;
+  text-align: center;
+}
+.status-step .dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--color-border);
+}
+.status-step.reached .dot { background: var(--color-primary); }
+.status-step.current .dot { background: var(--color-accent); box-shadow: 0 0 0 4px var(--color-accent-light); }
+.status-step .lbl { font-size: 0.68rem; color: var(--color-ink-muted); text-transform: capitalize; }
+.status-step.reached .lbl { color: var(--color-ink); font-weight: 600; }
+
+.sim-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  gap: 14px;
+  padding: 14px 18px 28px;
+  align-items: start;
+}
+.sim-center { display: flex; flex-direction: column; }
+.sim-center .phone-mock { min-height: 460px; }
+.sim-side .card { position: sticky; top: 70px; }
+
+.profile-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.profile-table td { padding: 5px 0; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.profile-table td:first-child { width: 40%; }
+.profile-table td:last-child { font-weight: 600; }
+
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 18px;
+  background: #14261f;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.demo-controls .demo-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.demo-controls button {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.demo-controls button:hover { background: rgba(255,255,255,0.2); }
+
+@media (max-width: 900px) {
+  .sim-layout { grid-template-columns: 1fr; }
+  .sim-side .card { position: static; }
+  .sim-center { order: -1; }
+}
+
 @media (max-width: 720px) {
   .grid-2 { grid-template-columns: 1fr; }
 }

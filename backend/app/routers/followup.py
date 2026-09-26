@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from ..db import get_conn
+from ..db import get_conn, add_case_history
 
 router = APIRouter(prefix="/api/followup", tags=["followup"])
 
@@ -19,6 +19,7 @@ def get_followups(case_id: str):
             {
                 "milestone": r["milestone"],
                 "status": r["status"],
+                "outcome": r["outcome"],
                 "note": r["note"],
                 "earning_monthly": r["earning_monthly"],
                 "updated_at": r["updated_at"],
@@ -30,6 +31,7 @@ def get_followups(case_id: str):
 
 class FollowupUpdateRequest(BaseModel):
     status: str
+    outcome: str | None = None
     note: str | None = None
     earning_monthly: int | None = None
 
@@ -43,8 +45,10 @@ def update_followup(case_id: str, milestone: str, req: FollowupUpdateRequest):
         if not row:
             raise HTTPException(404, "Follow-up milestone not found")
         conn.execute(
-            "UPDATE followups SET status=?, note=?, earning_monthly=?, updated_at=CURRENT_TIMESTAMP WHERE case_id=? AND milestone=?",
-            (req.status, req.note, req.earning_monthly, case_id, milestone),
+            "UPDATE followups SET status=?, outcome=?, note=?, earning_monthly=?, updated_at=CURRENT_TIMESTAMP WHERE case_id=? AND milestone=?",
+            (req.status, req.outcome, req.note, req.earning_monthly, case_id, milestone),
         )
+        add_case_history(conn, case_id, f"followup_{milestone}",
+                         f"{milestone}: {req.outcome or req.status}" + (f" (₹{req.earning_monthly}/mo)" if req.earning_monthly else ""))
         conn.commit()
-    return {"case_id": case_id, "milestone": milestone, "status": req.status}
+    return {"case_id": case_id, "milestone": milestone, "status": req.status, "outcome": req.outcome}
