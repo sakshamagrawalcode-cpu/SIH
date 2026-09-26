@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db
 from .routers import (
     conversation, cases, officer, followup, map as map_router,
-    profiles, documents,
+    profiles, documents, system,
 )
 
 app = FastAPI(title="SkillCall Prototype API", version="0.2.0")
@@ -25,6 +25,7 @@ app.include_router(followup.router)
 app.include_router(map_router.router)
 app.include_router(profiles.router)
 app.include_router(documents.router)
+app.include_router(system.router)
 
 
 @app.get("/api/health")

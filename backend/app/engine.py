@@ -7,9 +7,39 @@ keyword matching against occupations.csv so the demo runs fully offline.
 """
 from typing import Optional
 from . import data_loader as dl
+from .services import sarvam, pipeline
+
+
+def _llm_match_occupation(spoken_text: str) -> Optional[dict]:
+    """Try the Sarvam LLM to pick the best NCO occupation. Returns None on any failure."""
+    catalogue = "\n".join(
+        f"- {r['occupation']} (NCO {r['nco_code']})" for _, r in dl.occupations_df.iterrows()
+    )
+    system = (
+        "You map a worker's self-described job to exactly one occupation from a fixed list "
+        "of India NCO occupations. Reply with ONLY the exact occupation name from the list, nothing else."
+    )
+    user = f"Worker said: \"{spoken_text}\"\n\nOccupations:\n{catalogue}\n\nBest matching occupation name:"
+    reply = sarvam.chat(system, user, max_tokens=40)
+    if not reply:
+        return None
+    reply_l = reply.strip().lower()
+    for _, row in dl.occupations_df.iterrows():
+        if row["occupation"].lower() in reply_l or reply_l in row["occupation"].lower():
+            return {
+                "nco_code": row["nco_code"], "occupation": row["occupation"],
+                "description": row["description"], "education": row["education"],
+                "match_confidence": 0.95,
+            }
+    return None
 
 
 def match_occupation(spoken_text: str) -> Optional[dict]:
+    llm_result = _llm_match_occupation(spoken_text)
+    if llm_result:
+        llm_result["engine"] = "Sarvam LLM"
+        return llm_result
+
     text = spoken_text.lower()
     best = None
     best_score = 0
@@ -27,6 +57,7 @@ def match_occupation(spoken_text: str) -> Optional[dict]:
         "description": best["description"],
         "education": best["education"],
         "match_confidence": min(0.98, 0.55 + 0.15 * best_score),
+        "engine": "Local rule engine (demo)",
     }
 
 
@@ -252,7 +283,13 @@ def _answer_from_option(question: str, context: dict) -> dict:
 
 
 def answer_question(question: str, context: dict) -> dict:
-    """Q&A endpoint output: answer + SATYA verification block."""
+    """Q&A output: answer + SATYA verification block.
+
+    The verified FACT always comes from the DB (rule engine). When the Sarvam
+    LLM is live it only rephrases that verified fact conversationally in the
+    caller's language — it is never allowed to introduce a new fact, so SATYA
+    still gates every claim against the database.
+    """
     result = _answer_from_option(question, context)
     satya = {
         "claim": result["fact"] or result["answer"],
@@ -261,6 +298,23 @@ def answer_question(question: str, context: dict) -> dict:
         "status": "VERIFIED" if result["verified"] else "NOT VERIFIED",
     }
     spoken = result["answer"]
-    if not result["verified"]:
+    engine = "Local rule engine (demo)"
+
+    if result["verified"]:
+        language = context.get("language", "Hindi")
+        rephrased = sarvam.chat(
+            (
+                "You are a helpful local-language livelihood assistant. Rephrase the given VERIFIED "
+                f"fact naturally in {language} for a low-literacy caller. Do NOT add any new facts, "
+                "numbers, scheme names or promises beyond what is given."
+            ),
+            f"Verified fact: {result['answer']}",
+            max_tokens=120,
+        )
+        if rephrased:
+            spoken = rephrased
+            engine = "Sarvam LLM"
+    else:
         spoken = "I could not verify this against the database, so I will not state it as a fact. " + result["answer"]
-    return {"answer": spoken, "satya": satya}
+
+    return {"answer": spoken, "satya": satya, "engine": engine}

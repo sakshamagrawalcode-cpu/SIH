@@ -250,6 +250,7 @@ export default function CallSimulator() {
       const res = await api.ask(q, {
         occupation: state.occupationMatch?.occupation,
         selected_option: state.selectedOption,
+        language: state.language,
       });
       addTranscript("system", res.answer);
       speak(res.answer);
@@ -299,6 +300,7 @@ export default function CallSimulator() {
       spokenSkillsText: d.spokenSkillsText, yearsExperience: d.yearsExperience, skillAnswers: d.skillAnswers,
     });
     setFirstTime(true);
+    setStage("profile_collected", true);
     setStageLocal(S.READBACK);
   };
   const skipVoice = () => {
@@ -522,6 +524,7 @@ export default function CallSimulator() {
                 <div className="card" style={convoCard}>
                   <p style={{ color: "white" }}>Matched: <strong>{state.occupationMatch.occupation}</strong></p>
                   <p className="muted" style={{ color: "#c8d6ce" }}>NCO {state.occupationMatch.nco_code} · {Math.round(state.occupationMatch.match_confidence * 100)}% confidence</p>
+                  <span className={`tag ${/demo/i.test(state.occupationMatch.engine || "") ? "tag-demo" : "tag-has"}`} style={{ marginTop: 4 }}>via {state.occupationMatch.engine || "rule engine"}</span>
                   <button className="btn btn-accent btn-block btn-sm" style={{ marginTop: 10 }} onClick={loadQuestions}>Start Skill Questions →</button>
                 </div>
               </ConvoFrame>
@@ -605,6 +608,7 @@ export default function CallSimulator() {
                       <p style={{ color: "#c8d6ce" }}>Q: {qa.q}</p>
                       <p style={{ color: "white" }}>A: {qa.answer}</p>
                       <span className={`tag ${qa.satya.verified ? "tag-has" : "tag-missing"}`}>SATYA: {qa.satya.status}</span>
+                      {qa.engine && <span className={`tag ${/demo/i.test(qa.engine) ? "tag-demo" : "tag-has"}`} style={{ marginLeft: 6 }}>{qa.engine}</span>}
                     </div>
                   ))}
                   <button className="btn btn-outline btn-block btn-sm" style={{ ...outlineLight, marginTop: 8 }} onClick={() => goto(S.RECOMMENDATIONS)}>Back to Options</button>

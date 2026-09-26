@@ -4,6 +4,7 @@ import CallSimulator from "./pages/CallSimulator.jsx";
 import UserPortal from "./pages/UserPortal.jsx";
 import EditProfile from "./pages/EditProfile.jsx";
 import Documents from "./pages/Documents.jsx";
+import Architecture from "./pages/Architecture.jsx";
 import Profile from "./pages/Profile.jsx";
 import SkillGap from "./pages/SkillGap.jsx";
 import Recommendations from "./pages/Recommendations.jsx";
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/officer/case/:caseId" element={<OfficerCaseDetail />} />
       <Route path="/followup/:caseId" element={<Followup />} />
       <Route path="/map" element={<DemandMap />} />
+      <Route path="/architecture" element={<Architecture />} />
     </Routes>
   );
 }
