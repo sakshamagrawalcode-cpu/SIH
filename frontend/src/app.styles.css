@@ -394,6 +394,41 @@ p { line-height: 1.5; margin: 0; }
   color: white;
 }
 
+.flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+}
+.flow-node {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border);
+  padding: 10px 14px;
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.flow-node.live { border-color: var(--color-primary); background: var(--color-primary-light); }
+.flow-node.sim { border-style: dashed; }
+.flow-label { font-weight: 700; font-size: 0.9rem; flex: 1; }
+.flow-tech { font-size: 0.75rem; color: var(--color-ink-muted); }
+.flow-arrow { color: var(--color-ink-muted); font-size: 1rem; line-height: 1; }
+.flow-badge {
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
+  padding: 2px 7px; border-radius: 999px;
+}
+.flow-badge.live { background: #e2f4ec; color: var(--color-has); }
+.flow-badge.sim { background: #eef0f4; color: #56606e; }
+
+.model-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 10px; }
+.model-table th { text-align: left; padding: 8px 6px; border-bottom: 2px solid var(--color-border); font-size: 0.75rem; color: var(--color-ink-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.model-table td { padding: 8px 6px; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+
 .status-timeline {
   display: flex;
   flex-wrap: wrap;

@@ -84,5 +84,10 @@ export const api = {
 
   demandMap: () => request("/api/map"),
 
+  systemModels: () => request("/api/system/models"),
+
+  tts: (text, language) =>
+    request("/api/system/tts", { method: "POST", body: JSON.stringify({ text, language }) }),
+
   health: () => request("/api/health"),
 };

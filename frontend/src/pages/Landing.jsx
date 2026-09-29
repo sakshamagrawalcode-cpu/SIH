@@ -57,7 +57,10 @@ export default function Landing() {
           </div>
         </div>
 
-        <button className="btn btn-outline btn-block" onClick={() => navigate("/map")}>🗺 Demand Map</button>
+        <div className="grid-2">
+          <button className="btn btn-outline btn-block" onClick={() => navigate("/map")}>🗺 Demand Map</button>
+          <button className="btn btn-outline btn-block" onClick={() => navigate("/architecture")}>🧩 Architecture</button>
+        </div>
 
         <p className="muted center" style={{ fontSize: "0.75rem" }}>
           Ministry of Social Justice &amp; Empowerment · PM-AJAY GIA · Agriculture, FoodTech &amp; Rural Development
