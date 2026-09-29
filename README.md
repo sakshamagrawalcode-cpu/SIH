@@ -38,6 +38,23 @@ functional prototype** for the hackathon demo, not a production system.
   typed-text fallback where the browser doesn't support it. This stands in
   for the production stack (Pipecat + Sarvam Saaras/Bulbul/LLM + AI4Bharat
   IndicConformer) described in the architecture doc.
+- **Telephony** (`telephony/`): **real phone calls via Exotel.** Any phone,
+  including a keypad phone, calls the Exotel number, and the call streams into
+  our FastAPI server over a `wss://` WebSocket. We hear the caller live in a
+  browser dashboard, see their key presses live, and play audio clips back to
+  their phone (a welcome clip and one clip per key). This has been tested on a
+  real call. See [`telephony/README.md`](telephony/README.md).
+
+## Telephony progress (real calls)
+
+| Milestone | Status |
+|---|---|
+| Real mobile call → Exotel → Cloudflare Tunnel → our FastAPI server | ✅ Working |
+| Key presses (DTMF) shown live on the dashboard | ✅ Working (real call) |
+| Caller's voice streamed live to the browser, calls saved as `.wav` | ✅ Built |
+| Audio clips played back to the caller (welcome + per key) | ✅ Built |
+| STT → AI interview → TTS on the live call (Sarvam / LLM) | 🟡 Code ready in `telephony/backend/later/`, not wired in yet |
+| Remove the trial-number PIN prompt | ⏳ Needs a dedicated (paid) ExoPhone |
 
 ## Model stack (Sarvam · AI4Bharat · Pipecat)
 
@@ -53,7 +70,7 @@ or via `GET /api/system/models`.
 | LLM (NCO map, dialog, Q&A) | **Sarvam LLM** (`sarvam-m` / 30B / 105B) | `SARVAM_API_KEY` set | Local rule/keyword engine |
 | TTS | **Sarvam Bulbul** (`bulbul:v2`) | `SARVAM_API_KEY` set | Browser SpeechSynthesis |
 | Orchestration | **Pipecat** voice pipeline | (prod) | In-process orchestrator |
-| Telephony | **Exotel / Plivo** | `SKILLCALL_TELEPHONY` set | Browser call simulator |
+| Telephony | **Exotel / Plivo** | `SKILLCALL_TELEPHONY` set | Browser call simulator (a real Exotel call bridge already works separately in [`telephony/`](telephony/README.md) and still has to be connected to the main app's flow) |
 | DB | **PostgreSQL + pgvector** | (prod) | SQLite (bundled) |
 
 Integration lives in `backend/app/services/` (`sarvam.py`, `ai4bharat.py`,
@@ -116,7 +133,7 @@ the API base URL from `frontend/.env` (`VITE_API_URL`, defaults to
 | DB | PostgreSQL + pgvector | SQLite (cases, follow-ups) + CSV/JSON reference data |
 | Cache/jobs | Redis + Celery | Not needed at prototype scale |
 | Map | Leaflet | Leaflet (same) |
-| Telephony | Exotel/Plivo | Simulated missed-call/callback UI |
+| Telephony | Exotel/Plivo | Simulated UI in the main app; **real Exotel calls working** in `telephony/` (Voicebot WebSocket, live audio, DTMF, audio playback) |
 
 ## Data
 
