@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { api } from "../api/client.js";
 
 const LANG_CODES = {
   Hindi: "hi-IN",
@@ -54,7 +55,7 @@ export function useVoice(language = "Hindi") {
     setListening(false);
   }, []);
 
-  const speak = useCallback(
+  const browserSpeak = useCallback(
     (text) => {
       if (typeof window === "undefined" || !window.speechSynthesis) return;
       const utterance = new SpeechSynthesisUtterance(text);
@@ -63,6 +64,23 @@ export function useVoice(language = "Hindi") {
       window.speechSynthesis.speak(utterance);
     },
     [language]
+  );
+
+  // Try Sarvam Bulbul TTS via backend; fall back to browser SpeechSynthesis.
+  const speak = useCallback(
+    (text) => {
+      api.tts(text, language)
+        .then((res) => {
+          if (res && !res.fallback && res.audio) {
+            const audio = new Audio(res.audio);
+            audio.play().catch(() => browserSpeak(text));
+          } else {
+            browserSpeak(text);
+          }
+        })
+        .catch(() => browserSpeak(text));
+    },
+    [language, browserSpeak]
   );
 
   return { listen, stopListening, speak, listening, supported };

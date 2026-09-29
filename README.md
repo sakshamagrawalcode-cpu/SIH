@@ -56,19 +56,32 @@ functional prototype** for the hackathon demo, not a production system.
 | STT → AI interview → TTS on the live call (Sarvam / LLM) | 🟡 Code ready in `telephony/backend/later/`, not wired in yet |
 | Remove the trial-number PIN prompt | ⏳ Needs a dedicated (paid) ExoPhone |
 
-## What is stubbed for later connection
+## Model stack (Sarvam · AI4Bharat · Pipecat)
 
-The prototype runs fully offline. These target integrations are simulated and
-can be wired in later without changing the app's data contracts:
-- **Sarvam STT / TTS / LLM** and **AI4Bharat IndicConformer** → browser Web
-  Speech API + a transparent rule/keyword engine (`backend/app/engine.py`).
-- **Telephony (Exotel/Plivo)** → simulated missed-call / callback UI in the
-  main app. A **real Exotel integration now works separately** in
-  `telephony/` and still has to be connected to the main app's flow.
-- **PostgreSQL + pgvector, Redis + Celery** → SQLite; not needed at prototype
-  scale.
-- **Real government/scheme data & document verification** → clearly-labelled
-  demo/sample data; no official statistics are invented.
+The real tech stack is wired in and **activates automatically when API keys are
+present**, falling back to fully-working local/browser engines otherwise. See
+the live/simulated status any time on the **Architecture** page (`/architecture`)
+or via `GET /api/system/models`.
+
+| Component | Model / tech | Live when… | Fallback (demo) |
+|---|---|---|---|
+| STT | **Sarvam Saaras** (`saaras:v2.5`) | `SARVAM_API_KEY` set | Browser Web Speech API |
+| STT fallback | **AI4Bharat IndicConformer** | `AI4BHARAT_ENDPOINT` set | Browser Web Speech API |
+| LLM (NCO map, dialog, Q&A) | **Sarvam LLM** (`sarvam-m` / 30B / 105B) | `SARVAM_API_KEY` set | Local rule/keyword engine |
+| TTS | **Sarvam Bulbul** (`bulbul:v2`) | `SARVAM_API_KEY` set | Browser SpeechSynthesis |
+| Orchestration | **Pipecat** voice pipeline | (prod) | In-process orchestrator |
+| Telephony | **Exotel / Plivo** | `SKILLCALL_TELEPHONY` set | Browser call simulator (a real Exotel call bridge already works separately in [`telephony/`](telephony/README.md) and still has to be connected to the main app's flow) |
+| DB | **PostgreSQL + pgvector** | (prod) | SQLite (bundled) |
+
+Integration lives in `backend/app/services/` (`sarvam.py`, `ai4bharat.py`,
+`pipeline.py`, `config.py`). To go live, copy `backend/.env.example` to
+`backend/.env` and set `SARVAM_API_KEY` — the LLM then drives occupation
+matching and rephrases SATYA-verified answers in the caller's language, and
+Bulbul audio replaces browser TTS. **SATYA still gates every fact against the
+database, so the LLM can never introduce an unverified government claim.**
+
+All scheme/course/demand data remains clearly-labelled demo/sample data; no
+official statistics are invented.
 
 **All scheme names, course details, distances, demand figures and outcomes
 are illustrative demo/sample data** — clearly marked in the UI — and must
