@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone Listener</title>
+<style>
+  body { margin:0; font-family:system-ui, sans-serif; background:#0f1115; color:#e6e6e6;
+         display:flex; justify-content:center; padding:32px 16px; }
+  .box { width:100%; max-width:560px; text-align:center; }
+  #status { font-size:20px; margin:16px 0; color:#8a8f98; }
+  #status.live { color:#22c55e; }
+  #playing { color:#60a5fa; min-height:22px; }
+  button { padding:14px 24px; font-size:17px; border:0; border-radius:10px;
+           background:#22c55e; color:#000; font-weight:600; cursor:pointer; }
+  button.on { background:#374151; color:#e6e6e6; }
+  #lastKey { font-size:72px; color:#f59e0b; font-weight:700; min-height:86px; }
+  #keys { font-family:monospace; color:#8a8f98; word-break:break-all; }
+  h3 { margin-top:36px; text-align:left; }
+  .hint { color:#8a8f98; font-size:14px; text-align:left; margin-top:-6px; }
+  #slots { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .slot { background:#181b22; border-radius:10px; padding:10px; text-align:left;
+          display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .slot.welcome { grid-column:1 / -1; }
+  .slot b { font-size:20px; }
+  .slot .file { font-size:12px; color:#8a8f98; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .slot .file.has { color:#22c55e; }
+  .slot .row { display:flex; gap:6px; }
+  .slot label, .slot .del { font-size:13px; padding:6px 10px; border-radius:6px; cursor:pointer;
+          background:#2563eb; color:#fff; font-weight:600; }
+  .slot .del { background:#374151; border:0; }
+  .slot input { display:none; }
+  @media (max-width:420px){ #slots { grid-template-columns:repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>📞 Phone Listener</h2>
+  <button id="listenBtn">🔊 Click to enable sound</button>
+  <div id="status">waiting for a call…</div>
+  <div id="playing"></div>
+  <div>Last key pressed</div>
+  <div id="lastKey">–</div>
+  <div id="keys"></div>
+
+  <h3>🎵 Sounds played to the caller</h3>
+  <p class="hint">Upload an mp3 / wav / flac / ogg for each key. "Welcome" plays when the call connects.</p>
+  <div id="slots"></div>
+</div>
+<script>
+const statusEl = document.getElementById("status");
+const playingEl = document.getElementById("playing");
+const btn = document.getElementById("listenBtn");
+let audioCtx = null, playAt = 0, sampleRate = 8000;
+
+// ---------- live caller audio ----------
+btn.onclick = () => {   // browsers only allow sound after a click
+  if (audioCtx) { audioCtx.close(); audioCtx = null; btn.textContent = "🔊 Click to enable sound"; btn.className = ""; return; }
+  audioCtx = new AudioContext();
+  playAt = 0;
+  btn.textContent = "🔇 Sound ON (click to mute)";
+  btn.className = "on";
+};
+
+function play(buf) {   // raw 16-bit PCM chunk from the phone
+  if (!audioCtx) return;
+  const pcm = new Int16Array(buf);
+  const audioBuf = audioCtx.createBuffer(1, pcm.length, sampleRate);
+  const ch = audioBuf.getChannelData(0);
+  for (let i = 0; i < pcm.length; i++) ch[i] = pcm[i] / 32768;
+  const src = audioCtx.createBufferSource();
+  src.buffer = audioBuf;
+  src.connect(audioCtx.destination);
+  playAt = Math.max(playAt, audioCtx.currentTime + 0.05);
+  src.start(playAt);
+  playAt += audioBuf.duration;
+}
+
+function connect() {
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/dashboard/ws`);
+  ws.binaryType = "arraybuffer";
+  ws.onclose = () => { statusEl.textContent = "server not reachable – retrying…"; setTimeout(connect, 2000); };
+  ws.onopen = () => { statusEl.textContent = "waiting for a call…"; };
+  ws.onmessage = (e) => {
+    if (e.data instanceof ArrayBuffer) return play(e.data);
+    const ev = JSON.parse(e.data);
+    if (ev.type === "call_started") {
+      sampleRate = ev.sample_rate || 8000;
+      statusEl.textContent = "🟢 On call with " + (ev.from || "caller");
+      statusEl.className = "live";
+      document.getElementById("keys").textContent = "";
+      document.getElementById("lastKey").textContent = "–";
+    } else if (ev.type === "dtmf") {
+      document.getElementById("lastKey").textContent = ev.digit;
+      document.getElementById("keys").textContent += ev.digit + " ";
+    } else if (ev.type === "playing") {
+      playingEl.textContent = "▶ Playing to caller: " + ev.name;
+    } else if (ev.type === "finished") {
+      playingEl.textContent = "";
+    } else if (ev.type === "call_ended") {
+      statusEl.textContent = "call ended – waiting for a call…";
+      statusEl.className = "";
+      playingEl.textContent = "";
+    }
+  };
+}
+connect();
+
+// ---------- audio uploads ----------
+const SLOTS = ["welcome","1","2","3","4","5","6","7","8","9","star","0","hash"];
+const LABEL = { welcome:"Welcome", star:"*", hash:"#" };
+
+function renderSlots(files) {
+  const box = document.getElementById("slots");
+  box.innerHTML = "";
+  for (const slot of SLOTS) {
+    const div = document.createElement("div");
+    div.className = "slot" + (slot === "welcome" ? " welcome" : "");
+    div.innerHTML = `<b></b><span class="file"></span>
+      <div class="row"><label>Upload<input type="file" accept=".mp3,.wav,.flac,.ogg"></label></div>`;
+    div.querySelector("b").textContent = slot === "welcome" ? "Welcome" : "Key " + (LABEL[slot] || slot);
+    const fileEl = div.querySelector(".file");
+    fileEl.textContent = files[slot] || "no sound";
+    if (files[slot]) {
+      fileEl.classList.add("has");
+      const del = document.createElement("button");
+      del.className = "del"; del.textContent = "Remove";
+      del.onclick = async () => renderSlots(await (await fetch(`/audio/${slot}`, { method:"DELETE" })).json());
+      div.querySelector(".row").appendChild(del);
+    }
+    div.querySelector("input").onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      fileEl.textContent = "uploading…";
+      const res = await fetch(`/audio/${slot}?filename=${encodeURIComponent(file.name)}`, { method:"POST", body:file });
+      const out = await res.json();
+      if (!res.ok) { alert(out.error || "Upload failed"); return loadSlots(); }
+      renderSlots(out);
+    };
+    box.appendChild(div);
+  }
+}
+async function loadSlots() { renderSlots(await (await fetch("/audio")).json()); }
+loadSlots();
+</script>
+</body>
+</html>

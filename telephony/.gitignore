@@ -1,0 +1,6 @@
+# Call recordings contain real callers' voices - never commit them
+backend/recordings/
+# Sound clips uploaded from the dashboard
+backend/audio/
+backend/profiles/
+.env
